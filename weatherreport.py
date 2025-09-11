@@ -1,5 +1,3 @@
-
-
 def sensorStub():
     return {
         'temperatureInC': 50,
@@ -38,7 +36,42 @@ def testHighPrecipitation():
     assert(len(weather) > 0);
 
 
+def get_weather(sensor):
+    temp = sensor.read_temperature()
+    if temp > 40:
+        return "Too hot"
+    elif temp < 0:
+        return "Too cold"
+    else:
+        return "All is well"
+
+
+# Weak test (does not expose bug)
+class DummySensor:
+    def read_temperature(self):
+        return 25
+
+
+assert get_weather(DummySensor()) == "All is well"
+
+
+# Strong test to expose bug
+class EdgeSensor:
+    def __init__(self, temp):
+        self._temp = temp
+
+    def read_temperature(self):
+        return self._temp
+
+
+def test_get_weather():
+    assert get_weather(EdgeSensor(41)) == "Too hot"
+    assert get_weather(EdgeSensor(-1)) == "Too cold"
+    assert get_weather(EdgeSensor(0)) == "All is well"  # This will fail if the bug is at boundary
+
+
+test_get_weather()
 if __name__ == '__main__':
     testRainy()
     testHighPrecipitation()
-    print("All is well (maybe!)");
+    print("All is well (maybe!)")
